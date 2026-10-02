@@ -29,6 +29,10 @@ public class LocationActivity extends AppCompatActivity {
         //get the parcelable location to retrieve its attributes
         Intent intent = getIntent();
         final Location location = intent.getParcelableExtra("location");
+        if (location == null) {
+            finish();
+            return;
+        }
         //set the title of the toolbar according to the name of the location
         setTitle(location.getName());
 
@@ -61,7 +65,7 @@ public class LocationActivity extends AppCompatActivity {
         if ((location.getOpensAt() == 0f) && (location.getClosesAt() == 24f)) {
             hoursView.setText(getString(R.string.open_24_hours));
         } else {
-            hoursView.setText(String.format(getString(R.string.working_hours), formatTime(location.getOpensAt()), formatTime(location.getClosesAt())));
+            hoursView.setText(String.format(getString(R.string.working_hours), OpeningHours.formatTime(location.getOpensAt()), OpeningHours.formatTime(location.getClosesAt())));
         }
         //set the phone number of the location
         TextView phoneNumberView = findViewById(R.id.phone_number_view);
@@ -84,7 +88,6 @@ public class LocationActivity extends AppCompatActivity {
                 } else {
                     mapIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(String.format("geo:0,0?q=%s", Uri.encode(location.getAddress()))));
                 }
-                mapIntent.setPackage("com.google.android.apps.maps");
                 if (mapIntent.resolveActivity(getPackageManager()) != null) {
                     startActivity(mapIntent);
                 }
@@ -117,30 +120,4 @@ public class LocationActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A method to format time in hours and minutes
-     *
-     * @param time is the time as a float variable
-     * @return the time formatted as a String variable
-     */
-    String formatTime(float time) {
-        String formattedTime;
-        if ((int) time > 12) {
-            formattedTime = String.valueOf(((int) time) - 12);
-        } else if ((int) time == 0) {
-            formattedTime = String.valueOf(12);
-        } else {
-            formattedTime = String.valueOf((int) time);
-        }
-        if (!(time - (int) time == 0)) {
-            formattedTime += ":" + String.valueOf((int) ((time - (int) time) * 60));
-        }
-        if (((int) time >= 12) && (time < 24f)) {
-            formattedTime += " PM";
-            return formattedTime;
-        } else {
-            formattedTime += " AM";
-            return formattedTime;
-        }
-    }
 }

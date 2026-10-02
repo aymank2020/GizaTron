@@ -46,17 +46,15 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.ViewHo
         viewHolder.nameView.setText(location.getName());
         viewHolder.addressView.setText(location.getAddress());
         //get the current time on the device
-        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Africa/Cairo"));
         float currentTime = (float) ((float) calendar.get(Calendar.HOUR_OF_DAY) + (calendar.get(Calendar.MINUTE) / 60.) + (calendar.get(Calendar.SECOND) / 3600.));
         //determine whether the location is Open or Closed and display the status along with auxiliary info
         if ((location.getOpensAt() == 0f) && (location.getClosesAt() == 24f)) {
             viewHolder.statusView.setText(mContext.getString(R.string.open_24_hours));
-        } else if ((currentTime > location.getOpensAt()) && (currentTime < location.getClosesAt())) {
-            viewHolder.statusView.setText(String.format(mContext.getString(R.string.open_closes_at), formatTime(location.getClosesAt())));
-        } else if ((location.getClosesAt() < location.getOpensAt()) && (currentTime < location.getClosesAt())) {
-            viewHolder.statusView.setText(String.format(mContext.getString(R.string.open_closes_at), formatTime(location.getClosesAt())));
+        } else if (OpeningHours.isOpen(location.getOpensAt(), location.getClosesAt(), currentTime)) {
+            viewHolder.statusView.setText(String.format(mContext.getString(R.string.open_closes_at), OpeningHours.formatTime(location.getClosesAt())));
         } else {
-            viewHolder.statusView.setText(String.format(mContext.getString(R.string.closed_opens_at), formatTime(location.getOpensAt())));
+            viewHolder.statusView.setText(String.format(mContext.getString(R.string.closed_opens_at), OpeningHours.formatTime(location.getOpensAt())));
         }
 
     }
@@ -84,7 +82,10 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.ViewHo
 
         @Override
         public void onClick(View view) {
-            if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
+            int position = getAdapterPosition();
+            if (mClickListener != null && position != RecyclerView.NO_POSITION) {
+                mClickListener.onItemClick(view, position);
+            }
         }
     }
 
@@ -103,30 +104,4 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.ViewHo
         void onItemClick(View view, int position);
     }
 
-    /**
-     * A method to format time in hours and minutes
-     *
-     * @param time is the time as a float variable
-     * @return the time formatted as a String variable
-     */
-    private String formatTime(float time) {
-        String formattedTime;
-        if ((int) time > 12) {
-            formattedTime = String.valueOf(((int) time) - 12);
-        } else if ((int) time == 0) {
-            formattedTime = String.valueOf(12);
-        } else {
-            formattedTime = String.valueOf((int) time);
-        }
-        if (!(time - (int) time == 0)) {
-            formattedTime += ":" + String.valueOf((int) ((time - (int) time) * 60));
-        }
-        if (((int) time >= 12) && (time < 24f)) {
-            formattedTime += " PM";
-            return formattedTime;
-        } else {
-            formattedTime += " AM";
-            return formattedTime;
-        }
-    }
 }
